@@ -21,6 +21,8 @@ class Point(object):
     def __init__(self, x=0.0, y=0.0):
         self.x = x
         self.y = y
+    def __str__(self):
+        return "x: %.2f, y: %.2f"%(self.x,self.y)
 
 class Endpoint(Point):
     def __init__(self,x,y):
@@ -32,13 +34,15 @@ class Endpoint(Point):
         self.visualize = False
 
     def __str__(self):
-        return "x: %f, y: %f, begin: %s, angle: %f"%(self.x,self.y,self.begin,self.angle)
+        return "x: %f, y: %f, begin: %s, angle: %f"%(self.x,self.y,self.begin,math.degrees(self.angle))
 
 class Segment():
     def __init__(self,p1,p2,d=0.0):
         self.p1 = p1
         self.p2 = p2
         self.d = d
+    def __str__(self):
+        return "p1: %s\np2: %s"%(self.p1,self.p2)
 
 
 class Visibility():
@@ -71,7 +75,7 @@ class Visibility():
 
     def load_map(self, size, margin, blocks = [], walls = []):
         # walls are segments
-        self.load_map_edges(size, margin)
+        # self.load_map_edges(size, margin)
         for block in blocks:
             x = block.x
             y = block.y
@@ -139,44 +143,55 @@ class Visibility():
     def _segment_compare(self, a, b):
         if self._segment_in_front(a,b,self.center): return 1
         elif self._segment_in_front(b,a,self.center): return -1
+        # if a.d > b.d: return -1
+        # if a.d < b.d: return 1
         return 0
 
     def sweep(self, maxAngle = 999.0):
         self.endpoints.sort(self._end_point_compare)
         del self.open[:]
         begin_angle = 0.0
-        for p in self.endpoints: print p
+        # for p in self.endpoints: print p
 
         for run in range(2):
+            print "\n***run start***"
             for p in self.endpoints:
+                print "Point: ", p
                 closest_old = self.open[0] if self.open else None
                 if p.begin: 
                     self.open.append(p.segment)                    
                 else: 
                     if p.segment in self.open:
                         self.open.remove(p.segment)
-                    else:
-                        print "not added yet?", p.x, p.y
+                print "seeing: ",len(self.open)
                 self.open.sort(self._segment_compare)
+                # print "sorted: ",len(self.open)
                 closest_new = self.open[0] if self.open else None
+                print "close: "
+                print closest_new
                 if closest_old != closest_new:
+                    print "not equal"
                     if run == 1:
                         self.add_triangle(begin_angle, p.angle, p.segment)
                     begin_angle = p.angle
+                    print "angle: ",math.degrees(begin_angle)
+                else: print "equal"
 
-    def add_triangle(self,a1,a2,segment=None):
+    def add_triangle(self,a1,a2,segment):
+        print math.degrees(a1), math.degrees(a2)
+        print segment
         p1 = self.center
         p2 = Point(self.center.x + math.cos(a1), self.center.y + math.sin(a1))
         p3 = Point(segment.p1.x, segment.p1.y)
         p4 = Point(segment.p2.x, segment.p2.y)
 
         pBegin = self.line_intersection(p3, p4, p1, p2);
-        p2.x = self.center.x + math.cos(a2);
-        p2.y = self.center.y + math.sin(a2);
+        p2.x = self.center.x + math.cos(a2)
+        p2.y = self.center.y + math.sin(a2)
         pEnd = self.line_intersection(p3, p4, p1, p2);
 
-        self.triangles.append(pBegin);
-        self.triangles.append(pEnd);
+        self.triangles.append((pBegin,pEnd))
+        # self.triangles.append(pEnd);
 
     def line_intersection(self, p1, p2, p3, p4):
         s = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x))\
@@ -188,10 +203,31 @@ class Visibility():
 
 if __name__ == "__main__":
     vis = Visibility()
-    walls = [Segment(Point(5,0), Point(5,5))]
-    vis.load_map(10, 1, walls=walls)
+    complex_walls = [Segment(Point(0.0,0.0), Point(15.0,0.0)),
+                     Segment(Point(15.0,0.0), Point(15.0,10.0)),
+                     Segment(Point(15.0,10.0), Point(11.0,10.0)),
+                     Segment(Point(11.0,10.0), Point(11.0,8.0)),
+                     Segment(Point(11.0,8.0), Point(7.0,8.0)),
+                     Segment(Point(7.0,8.0), Point(7.0,10.0)),
+                     Segment(Point(7.0,10.0), Point(2.0,10.0)),
+                     Segment(Point(2.0,10.0), Point(2.0,2.0)),
+                     Segment(Point(2.0,2.0), Point(0.0,2.0)),
+                     Segment(Point(0.0,2.0), Point(0.0,0.0))]
+    simple_walls = [Segment(Point(0.0,0.0), Point(5.0,0.0)),
+                    Segment(Point(5.0,0.0), Point(5.0,6.0)),
+                    Segment(Point(5.0,6.0), Point(10.0,6.0)),
+                    Segment(Point(10.0,6.0), Point(10.0,10.0)),
+                    Segment(Point(10.0,10.0), Point(0.0,10.0)),
+                    Segment(Point(0.0,10.0), Point(0.0,0.0))]
+    square_walls = [Segment(Point(0.0,0.0), Point(0.0,10.0)),
+                    Segment(Point(0.0,10.0), Point(10.0,10.0)),
+                    Segment(Point(10.0,10.0), Point(10.0,0.0)),
+                    Segment(Point(10.0,0.0), Point(0.0,0.0))]
+    vis.load_map(10, 0, walls=square_walls)
     vis.set_light_location(3,3)
     vis.sweep()
-    print [(p.x,p.y) for p in vis.triangles]
+    # print [(p1.x,p2) for p in vis.triangles]
+    print len(vis.triangles)
+    for b,e in vis.triangles: print b,e
 
 
