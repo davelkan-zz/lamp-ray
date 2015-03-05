@@ -51,7 +51,7 @@ class Visibility():
         self.endpoints = []
         self.center = Point()
         self.open = []
-        self.intersections = []
+        # self.intersections = []
         self.triangles = []
 
     def add_segment(self, x1, y1, x2, y2):
@@ -103,15 +103,6 @@ class Visibility():
             segment.p1.begin = dAngle > 0.0
             segment.p2.begin = not segment.p1.begin
 
-
-    def _end_point_compare(self,a, b):
-        if a.angle > b.angle: return 1
-        if b.angle > a.angle: return -1
-        if not a.begin and b.begin: return 1
-        if a.begin and not b.begin: return -1
-        return 0
-
-
     def left_of(self, segment, point):
         s = segment
         p = point
@@ -137,8 +128,15 @@ class Visibility():
         if (A1 == A2 and A2 != A3): return False;
         if (B1 == B2 and B2 == B3): return False;
 
-        self.intersections.append([a.p1, a.p2, b.p1, b.p2])
+        # self.intersections.append([a.p1, a.p2, b.p1, b.p2])
         return False
+
+    def _endpoint_compare(self,a, b):
+        if a.angle > b.angle: return 1
+        if b.angle > a.angle: return -1
+        if not a.begin and b.begin: return 1
+        if a.begin and not b.begin: return -1
+        return 0
 
     def _segment_compare(self, a, b):
         if self._segment_in_front(a,b,self.center): return 1
@@ -148,47 +146,70 @@ class Visibility():
         return 0
 
     def sweep(self, maxAngle = 999.0):
-        self.endpoints.sort(self._end_point_compare)
+        self.endpoints.sort(self._endpoint_compare)
+
         del self.open[:]
         begin_angle = 0.0
-        # for p in self.endpoints: print p
 
         for run in range(2):
-            print "\n***run start***"
             for p in self.endpoints:
-                print "Point: ", p
+                # if run == 1:
+                    # print 'point'
                 closest_old = self.open[0] if self.open else None
                 if p.begin: 
                     self.open.append(p.segment)                    
                 else: 
                     if p.segment in self.open:
                         self.open.remove(p.segment)
-                print "seeing: ",len(self.open)
                 self.open.sort(self._segment_compare)
-                # print "sorted: ",len(self.open)
                 closest_new = self.open[0] if self.open else None
-                print "close: "
-                print closest_new
                 if closest_old != closest_new:
-                    print "not equal"
                     if run == 1:
+                        # print math.degrees(begin_angle),math.degrees(p.angle)
                         self.add_triangle(begin_angle, p.angle, p.segment)
                     begin_angle = p.angle
-                    print "angle: ",math.degrees(begin_angle)
-                else: print "equal"
 
-    def add_triangle(self,a1,a2,segment):
-        print math.degrees(a1), math.degrees(a2)
-        print segment
-        p1 = self.center
-        p2 = Point(self.center.x + math.cos(a1), self.center.y + math.sin(a1))
-        p3 = Point(segment.p1.x, segment.p1.y)
-        p4 = Point(segment.p2.x, segment.p2.y)
+    def sweep2(self):
+        self.endpoints.sort(self._endpoint_compare)
+        del self.open[:]
+        begin_angle = 0.0
 
-        pBegin = self.line_intersection(p3, p4, p1, p2);
-        p2.x = self.center.x + math.cos(a2)
-        p2.y = self.center.y + math.sin(a2)
-        pEnd = self.line_intersection(p3, p4, p1, p2);
+        for run in range(2):
+            for p in self.endpoints:
+                closest_old = self.open[0] if self.open else None
+                if p.begin:
+                    i = 0
+                    while len(self.open)>i and \
+                          self._segment_in_front(p.segment,self.open[i],self.center):
+                        i += 1
+                    if len(self.open)<i:
+                        self.open.append(p.segment)
+                    else:
+                        self.open = self.open[:i]+[p.segment]+self.open[i:]                    
+                else:
+                    if p.segment in self.open:
+                        self.open.remove(p.segment)
+                closest_new = self.open[0] if self.open else None
+                if run==1: 
+                    print "\np"
+                    print closest_new
+                if closest_old != closest_new:
+                    if run == 1:
+                        print math.degrees(begin_angle),math.degrees(p.angle)
+                        print p
+                        self.add_triangle(begin_angle, p.angle, closest_old)
+                    begin_angle = p.angle
+
+    def add_triangle(self,angle1,angle2,segment):
+        a1 = self.center
+        a2 = Point(self.center.x + math.cos(angle1), self.center.y + math.sin(angle1))
+        b1 = Point(segment.p1.x, segment.p1.y)
+        b2 = Point(segment.p2.x, segment.p2.y)
+
+        pBegin = self.line_intersection(b1, b2, a1, a2);
+        a2.x = self.center.x + math.cos(angle2)
+        a2.y = self.center.y + math.sin(angle2)
+        pEnd = self.line_intersection(b1, b2, a1, a2);
 
         self.triangles.append((pBegin,pEnd))
         # self.triangles.append(pEnd);
@@ -223,11 +244,11 @@ if __name__ == "__main__":
                     Segment(Point(0.0,10.0), Point(10.0,10.0)),
                     Segment(Point(10.0,10.0), Point(10.0,0.0)),
                     Segment(Point(10.0,0.0), Point(0.0,0.0))]
-    vis.load_map(10, 0, walls=square_walls)
-    vis.set_light_location(3,3)
+    vis.load_map(10, 0,walls=complex_walls)
+    vis.set_light_location(5.0,4.0)
     vis.sweep()
-    # print [(p1.x,p2) for p in vis.triangles]
-    print len(vis.triangles)
-    for b,e in vis.triangles: print b,e
+
+    print "result"
+    for p1,p2 in vis.triangles: print p1,"\t", p2
 
 
