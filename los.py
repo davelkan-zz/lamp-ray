@@ -136,6 +136,8 @@ class Visibility():
         if b.angle > a.angle: return -1
         if not a.begin and b.begin: return 1
         if a.begin and not b.begin: return -1
+        # if self._segment_in_front(a.segment,b.segment,self.center): return 1
+        # if self._segment_in_front(b.segment,a.segment,self.center): return -1
         return 0
 
     def _segment_compare(self, a, b):
@@ -163,10 +165,13 @@ class Visibility():
                         self.open.remove(p.segment)
                 self.open.sort(self._segment_compare)
                 closest_new = self.open[0] if self.open else None
-                if closest_old != closest_new:
+                if closest_old != closest_new and begin_angle != p.angle:
                     if run == 1:
-                        # print math.degrees(begin_angle),math.degrees(p.angle)
-                        self.add_triangle(begin_angle, p.angle, p.segment)
+                        print "run"
+                        print closest_old
+                        print closest_new
+                        print math.degrees(begin_angle),math.degrees(p.angle)
+                        self.add_triangle(begin_angle, p.angle, closest_old)
                     begin_angle = p.angle
 
     def sweep2(self):
@@ -244,8 +249,8 @@ if __name__ == "__main__":
                     Segment(Point(0.0,10.0), Point(10.0,10.0)),
                     Segment(Point(10.0,10.0), Point(10.0,0.0)),
                     Segment(Point(10.0,0.0), Point(0.0,0.0))]
-    vis.load_map(10, 0,walls=complex_walls)
-    vis.set_light_location(5.0,4.0)
+    vis.load_map(10, 0,walls=simple_walls)
+    vis.set_light_location(3.0,5.9)
     vis.sweep()
 
     print "result"
