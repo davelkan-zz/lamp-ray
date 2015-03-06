@@ -155,8 +155,6 @@ class Visibility():
 
         for run in range(2):
             for p in self.endpoints:
-                # if run == 1:
-                    # print 'point'
                 closest_old = self.open[0] if self.open else None
                 if p.begin: 
                     self.open.append(p.segment)                    
@@ -167,43 +165,9 @@ class Visibility():
                 closest_new = self.open[0] if self.open else None
                 if closest_old != closest_new and begin_angle != p.angle:
                     if run == 1:
-                        print "run"
-                        print closest_old
-                        print closest_new
-                        print math.degrees(begin_angle),math.degrees(p.angle)
                         self.add_triangle(begin_angle, p.angle, closest_old)
                     begin_angle = p.angle
 
-    def sweep2(self):
-        self.endpoints.sort(self._endpoint_compare)
-        del self.open[:]
-        begin_angle = 0.0
-
-        for run in range(2):
-            for p in self.endpoints:
-                closest_old = self.open[0] if self.open else None
-                if p.begin:
-                    i = 0
-                    while len(self.open)>i and \
-                          self._segment_in_front(p.segment,self.open[i],self.center):
-                        i += 1
-                    if len(self.open)<i:
-                        self.open.append(p.segment)
-                    else:
-                        self.open = self.open[:i]+[p.segment]+self.open[i:]                    
-                else:
-                    if p.segment in self.open:
-                        self.open.remove(p.segment)
-                closest_new = self.open[0] if self.open else None
-                if run==1: 
-                    print "\np"
-                    print closest_new
-                if closest_old != closest_new:
-                    if run == 1:
-                        print math.degrees(begin_angle),math.degrees(p.angle)
-                        print p
-                        self.add_triangle(begin_angle, p.angle, closest_old)
-                    begin_angle = p.angle
 
     def add_triangle(self,angle1,angle2,segment):
         a1 = self.center
@@ -226,6 +190,27 @@ class Visibility():
         x = p1.x + s * (p2.x - p1.x)
         y = p1.y + s * (p2.y - p1.y)
         return Point(x, y)
+
+    def setup(self,wall_points):
+        walls = []
+        i = 0
+        while i+1 < len(wall_points):
+            p1,p2 = wall_points[i],wall_points[i+1]
+            s = Segment(Point(*p1),Point(*p2))
+            walls.append(s)
+            i+=1
+        p1,p2 = wall_points[-1],wall_points[0]
+        walls.append(Segment(Point(*p1),Point(*p2)))
+
+        self.load_map(10,0,walls=walls)
+
+    def run(self,location):
+        self.set_light_location(*location)
+        self.sweep()
+        seen = []
+        for p1,p2 in self.triangles:
+            seen.append(((p1.x, p1.y),(p2.x,p2.y)))
+        return seen
 
 if __name__ == "__main__":
     vis = Visibility()
