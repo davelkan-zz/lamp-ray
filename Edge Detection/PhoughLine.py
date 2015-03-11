@@ -15,7 +15,7 @@ fullList = []
 lines = cv2.HoughLinesP(edges,1,np.pi/180,5,minLineLength,maxLineGap)
 for x1,y1,x2,y2 in lines[0]:
     if x1 != x2:
-        m = (float(y1) - y2)/(x1-float(x2))
+        m = (float(y1) - y2)/(x1-x2)
         if m == -0:
             m = 0
         b = x1 - m*y1
