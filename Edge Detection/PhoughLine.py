@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 import math
 
-
 class cornerFinder:
 	def __init__(self):
 		self.img = cv2.imread('box.jpg')
