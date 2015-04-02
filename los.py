@@ -165,11 +165,11 @@ class Visibility():
                 closest_new = self.open[0] if self.open else None
                 if closest_old != closest_new and begin_angle != p.angle:
                     if run == 1:
-                        self.add_triangle(begin_angle, p.angle, closest_old)
+                        self.add_triangle(begin_angle, p.angle, closest_old, closest_new)
                     begin_angle = p.angle
 
 
-    def add_triangle(self,angle1,angle2,segment):
+    def add_triangle(self,angle1,angle2,segment, segment2):
         a1 = self.center
         a2 = Point(self.center.x + math.cos(angle1), self.center.y + math.sin(angle1))
         b1 = Point(segment.p1.x, segment.p1.y)
@@ -180,12 +180,15 @@ class Visibility():
         a2.y = self.center.y + math.sin(angle2)
         pEnd = self.line_intersection(b1, b2, a1, a2);
 
-        self.triangles.append((pBegin,pEnd))
+        self.triangles.append((pBegin,pEnd,segment))
         # self.triangles.append(pEnd);
 
     def line_intersection(self, p1, p2, p3, p4):
-        s = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x))\
-            / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y))
+        d = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y))
+        if d == 0:
+            s = 0
+        else:
+            s = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x))/ d
 
         x = p1.x + s * (p2.x - p1.x)
         y = p1.y + s * (p2.y - p1.y)
@@ -207,10 +210,12 @@ class Visibility():
     def run(self,location):
         self.set_light_location(*location)
         self.sweep()
-        seen = []
-        for p1,p2 in self.triangles:
-            seen.append(((p1.x, p1.y),(p2.x,p2.y)))
-        return seen
+        in_sight = dict()
+        for s in self.segments  :
+            in_sight[s] = []
+        for p1,p2,s in self.triangles:
+            in_sight[s].append(((p1.x, p1.y),(p2.x,p2.y)))
+        return in_sight
 
 if __name__ == "__main__":
     vis = Visibility()
