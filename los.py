@@ -216,7 +216,9 @@ class Visibility():
         self.sweep()
         sights = []
         for p1,p2,s in self.triangles:
-            sights.append(((p1.x, p1.y),(p2.x,p2.y)))
+            x1, x2 = round(p1.x,3), round(p2.x,3)
+            y1, y2 = round(p1.y,3), round(p2.y,3)
+            sights.append(((x1, y1),(x2,y2)))
         return sights
 
 if __name__ == "__main__":
