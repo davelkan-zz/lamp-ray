@@ -76,8 +76,14 @@ sights = {}
 for position in feasable_points:
     sights[position] = vis.run(position)
 
+print len(sights)
 print feasable_points[0]
 print sights[feasable_points[0]]
+
+# pick three points -> note whether they are the same or not
+# add up walls they can see -> return percentage 
+# figure out distace between points -> give score based on the sum of the n-1 distances (drop the longest) between the three points
+
 
 
 
