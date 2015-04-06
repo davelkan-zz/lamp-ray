@@ -8,15 +8,15 @@ vis = los.Visibility()
 # feed the rest to los
 
 def x_y_min_max(walls):
-	#calculate the bounds of the feasable region
-	x_walls = []
-	y_walls = []
-	for segment in walls:
-		for point in segment:
-			x_walls.append(point[0])
-			y_walls.append(point[1])
-	#return [min(x_walls)+.1,max(x_walls)-.1,min(y_walls)+.1,max(y_walls)-.1] use this line to avoid placing points on the walls
-	return [min(x_walls),max(x_walls),min(y_walls),max(y_walls)]
+    #calculate the bounds of the feasable region
+    x_walls = []
+    y_walls = []
+    for segment in walls:
+        for point in segment:
+            x_walls.append(point[0])
+            y_walls.append(point[1])
+    #return [min(x_walls)+.1,max(x_walls)-.1,min(y_walls)+.1,max(y_walls)-.1] use this line to avoid placing points on the walls
+    return [min(x_walls),max(x_walls),min(y_walls),max(y_walls)]
 
 def matrix_gen(bounds):
     #generate a matrix of points that cover beyond the feasable region
@@ -74,7 +74,7 @@ vis.setup(walls)
 
 sights = {}
 for position in feasable_points:
-	sights[position] = vis.run(position)
+    sights[position] = vis.run(position)
 
 print feasable_points[0]
 print sights[feasable_points[0]]
