@@ -35,6 +35,9 @@ class Endpoint(Point):
 
     def __str__(self):
         return "x: %f, y: %f, begin: %s, angle: %f"%(self.x,self.y,self.begin,math.degrees(self.angle))
+    def clear(self):
+        self.angle = 0.0
+        self.begin = False
 
 class Segment():
     def __init__(self,p1,p2,d=0.0):
@@ -43,6 +46,11 @@ class Segment():
         self.d = d
     def __str__(self):
         return "p1: %s\np2: %s"%(self.p1,self.p2)
+
+    def clear(self):
+        self.d = 0.0
+        self.p1.clear()
+        self.p2.clear()
 
 
 class Visibility():
@@ -66,6 +74,7 @@ class Visibility():
         self.segments.append(segment)
         self.endpoints.append(p1)
         self.endpoints.append(p2)
+    
 
     def load_map_edges(self,size,margin):
         self.add_segment(margin, margin, margin, size-margin)
@@ -91,7 +100,9 @@ class Visibility():
         self.center.x = x
         self.center.y = y
 
+        self.triangles = []
         for segment in self.segments:
+            print segment.p1
             dx = 0.5 * (segment.p1.x + segment.p2.x) - x
             dy = 0.5 * (segment.p1.y + segment.p2.y) - y
             segment.d = dx*dx + dy*dy
@@ -136,15 +147,11 @@ class Visibility():
         if b.angle > a.angle: return -1
         if not a.begin and b.begin: return 1
         if a.begin and not b.begin: return -1
-        # if self._segment_in_front(a.segment,b.segment,self.center): return 1
-        # if self._segment_in_front(b.segment,a.segment,self.center): return -1
         return 0
 
     def _segment_compare(self, a, b):
         if self._segment_in_front(a,b,self.center): return 1
         elif self._segment_in_front(b,a,self.center): return -1
-        # if a.d > b.d: return -1
-        # if a.d < b.d: return 1
         return 0
 
     def sweep(self, maxAngle = 999.0):
@@ -197,12 +204,10 @@ class Visibility():
     def setup(self,wall_points):
         walls = []
         i = 0
-        while i+1 < len(wall_points):
-            p1,p2 = wall_points[i],wall_points[i+1]
+        for wall in wall_points:
+            p1,p2 = wall[0],wall[1]
             s = Segment(Point(*p1),Point(*p2))
             walls.append(s)
-            i+=1
-        p1,p2 = wall_points[-1],wall_points[0]
         walls.append(Segment(Point(*p1),Point(*p2)))
 
         self.load_map(10,0,walls=walls)
@@ -210,12 +215,10 @@ class Visibility():
     def run(self,location):
         self.set_light_location(*location)
         self.sweep()
-        in_sight = dict()
-        for s in self.segments  :
-            in_sight[s] = []
+        sights = []
         for p1,p2,s in self.triangles:
-            in_sight[s].append(((p1.x, p1.y),(p2.x,p2.y)))
-        return in_sight
+            sights.append(((p1.x, p1.y),(p2.x,p2.y)))
+        return sights
 
 if __name__ == "__main__":
     vis = Visibility()
