@@ -102,7 +102,6 @@ class Visibility():
 
         self.triangles = []
         for segment in self.segments:
-            print segment.p1
             dx = 0.5 * (segment.p1.x + segment.p2.x) - x
             dy = 0.5 * (segment.p1.y + segment.p2.y) - y
             segment.d = dx*dx + dy*dy
