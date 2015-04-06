@@ -43,14 +43,14 @@ def intersect(A,B,C,D):
 def inside_walls(walls, raw_points, start_point):
     #eliminate pooints from the matrix that are outside the walls
     feasable_points  = []
-    wall_segments = []
-    for i in range(len(walls)-2):
-        wall_segments.append([walls[i],walls[i+1]])
-    wall_segments.append([walls[len(walls)-1],walls[0]])
+    #wall_segments = []
+    #or i in range(len(walls)-2):
+    #    wall_segments.append([walls[i],walls[i+1]])
+    #wall_segments.append([walls[len(walls)-1],walls[0]])
 
     for point in raw_points:
         intersected_segments = 0
-        for wall in wall_segments:
+        for wall in walls:
             A = [start_point[0],start_point[1]]
             B = [point[0],point[1]]
             C = [wall[0][0],wall[0][1]]
@@ -70,12 +70,11 @@ walls = [[(0.0,0.0),(5.0,0.0)],[(5.0,0.0),(5.0,6.0)],[(5.0,6.0),(10.0,6.0)],[(10
 bounds = x_y_min_max(walls)
 raw_points = matrix_gen(bounds)
 feasable_points = inside_walls(walls, raw_points, start_point)
-
-walls = [(0.0,0.0),(5.0,0.0),(5.0,6.0),(10.0,6.0),(10.0,10.0),(0.0,10.0)]
 vis.setup(walls)
 
 sights = {}
 for position in feasable_points:
+	sights[position] = vis.run(position)
 
 print feasable_points[0]
 print sights[feasable_points[0]]
