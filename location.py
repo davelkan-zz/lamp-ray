@@ -11,10 +11,11 @@ def x_y_min_max(walls):
 	#calculate the bounds of the feasable region
 	x_walls = []
 	y_walls = []
-	for point in walls:
-		x_walls.append(point[0])
-		y_walls.append(point[1])
-	#return [min(x_walls)+.1,max(x_walls)-.1,min(y_walls)+.1,max(y_walls)-.1] #use this line to avoid placing points on the walls
+	for segment in walls:
+		for point in segment:
+			x_walls.append(point[0])
+			y_walls.append(point[1])
+	#return [min(x_walls)+.1,max(x_walls)-.1,min(y_walls)+.1,max(y_walls)-.1] use this line to avoid placing points on the walls
 	return [min(x_walls),max(x_walls),min(y_walls),max(y_walls)]
 
 def matrix_gen(bounds):
@@ -43,13 +44,13 @@ def inside_walls(walls, raw_points, start_point):
 	#eliminate pooints from the matrix that are outside the walls
 	feasable_points  = []
 	wall_segments = []
-	for i in range(len(walls)-2):
-		wall_segments.append([walls[i],walls[i+1]])
-	wall_segments.append([walls[len(walls)-1],walls[0]])
+	#for i in range(len(walls)-2):
+	#	wall_segments.append([walls[i],walls[i+1]])
+	#wall_segments.append([walls[len(walls)-1],walls[0]])
 
 	for point in raw_points:
 		intersected_segments = 0
-		for wall in wall_segments:
+		for wall in walls:
 			A = [start_point[0],start_point[1]]
 			B = [point[0],point[1]]
 			C = [wall[0][0],wall[0][1]]
@@ -63,7 +64,7 @@ def inside_walls(walls, raw_points, start_point):
 
 
 start_point = (1.0, 1.0)
-walls = [(0.0,0.0),(5.0,0.0),(5.0,6.0),(10.0,6.0),(10.0,10.0),(0.0,10.0)]
+walls = [[(0.0,0.0),(5.0,0.0)],[(5.0,0.0),(5.0,6.0)],[(5.0,6.0),(10.0,6.0)],[(10.0,6.0),(10.0,10.0)],[(10.0,10.0), (0.0,10.0)],[(0.0,10.0),(0.0,0.0)]]
 bounds = x_y_min_max(walls)
 raw_points = matrix_gen(bounds)
 feasable_points = inside_walls(walls, raw_points, start_point)
@@ -74,7 +75,8 @@ for position in feasable_points:
 	walls_seen = vis.run(position)
 	sights[position] = walls_seen
 
-print len(sights)
+print feasable_points[0]
+print sights[feasable_points[0]]
 
 
 
