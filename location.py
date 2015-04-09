@@ -1,4 +1,5 @@
 import los
+import follow_path
 
 vis = los.Visibility()
 
@@ -75,6 +76,10 @@ vis.setup(walls)
 sights = {}
 for position in feasable_points:
     sights[position] = vis.run(position)
+
+room = follow_path.follow(feasable_points, vis)
+# room contains a dictionary mapping from wall segments to the portions of it we have seen
+# next step: figure out where those portions overlap and calculate a percentage
 
 print len(sights)
 print feasable_points[0]

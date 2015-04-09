@@ -34,7 +34,7 @@ class Endpoint(Point):
         self.visualize = False
 
     def __str__(self):
-        return "x: %f, y: %f, begin: %s, angle: %f"%(self.x,self.y,self.begin,math.degrees(self.angle))
+        return "x: %.2f, y: %.2f, begin: %s, angle: %.2f"%(self.x,self.y,self.begin,self.angle)
     def clear(self):
         self.angle = 0.0
         self.begin = False
@@ -45,7 +45,10 @@ class Segment():
         self.p2 = p2
         self.d = d
     def __str__(self):
-        return "p1: %s\np2: %s"%(self.p1,self.p2)
+        return "\np1: %s, \np2: %s\n"%(self.p1,self.p2)
+    def __repr__(self):
+        return "\nsegment"
+        # return "p1: %s, p2: %s"%(self.p1,self.p2)
 
     def clear(self):
         self.d = 0.0
@@ -157,6 +160,7 @@ class Visibility():
         self.endpoints.sort(self._endpoint_compare)
 
         del self.open[:]
+        # begin_angle = self.endpoints[0].angle
         begin_angle = 0.0
 
         for run in range(2):
@@ -171,11 +175,11 @@ class Visibility():
                 closest_new = self.open[0] if self.open else None
                 if closest_old != closest_new and begin_angle != p.angle:
                     if run == 1:
-                        self.add_triangle(begin_angle, p.angle, closest_old, closest_new)
+                        self.add_triangle(begin_angle, p.angle, closest_old)
                     begin_angle = p.angle
 
 
-    def add_triangle(self,angle1,angle2,segment, segment2):
+    def add_triangle(self,angle1,angle2,segment):
         a1 = self.center
         a2 = Point(self.center.x + math.cos(angle1), self.center.y + math.sin(angle1))
         b1 = Point(segment.p1.x, segment.p1.y)
@@ -201,13 +205,13 @@ class Visibility():
         return Point(x, y)
 
     def setup(self,wall_points):
+        # for w in wall_points: print w
         walls = []
         i = 0
         for wall in wall_points:
             p1,p2 = wall[0],wall[1]
             s = Segment(Point(*p1),Point(*p2))
             walls.append(s)
-        walls.append(Segment(Point(*p1),Point(*p2)))
 
         self.load_map(10,0,walls=walls)
 
@@ -216,9 +220,9 @@ class Visibility():
         self.sweep()
         sights = []
         for p1,p2,s in self.triangles:
-            x1, x2 = round(p1.x,3), round(p2.x,3)
-            y1, y2 = round(p1.y,3), round(p2.y,3)
-            sights.append(((x1, y1),(x2,y2)))
+            x1, y1 = round(p1.x,3), round(p1.y,3)
+            x2, y2 = round(p2.x,3), round(p2.y,3)
+            sights.append(((x1, y1),(x2,y2),s))
         return sights
 
 if __name__ == "__main__":
