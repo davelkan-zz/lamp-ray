@@ -1,3 +1,5 @@
+import random
+
 import los
 import follow_path
 
@@ -77,17 +79,34 @@ sights = {}
 for position in feasable_points:
     sights[position] = vis.run(position)
 
-room = follow_path.follow(feasable_points, vis)
-# room contains a dictionary mapping from wall segments to the portions of it we have seen
-# next step: figure out where those portions overlap and calculate a percentage
+percentages = []
 
-print len(sights)
-print feasable_points[0]
-print sights[feasable_points[0]]
+path = [0]*2
+for point1 in feasable_points:
+    path[0] = point1
+    for point2 in feasable_points:
+        path[1] = point2
+
+        room = follow_path.follow(path, vis)
+        # room contains a dictionary mapping from wall segments to the portions of it we have seen
+        room.merge_visible()
+        percentages.append( (path, room.percentage()) )
+def min_func(thing):
+    path, _ = thing
+    a,b = path[0],path[1]
+    dist = ( (a[0]-b[0])**2 + (a[1]-b[1])**2)**0.5
+    return dist
+def full_coverage(thing):
+    _, perc = thing
+    return perc == 1.0
+
+print min(filter(full_coverage,percentages),key=min_func)
+
 
 # pick three points -> note whether they are the same or not
 # add up walls they can see -> return percentage 
 # figure out distace between points -> give score based on the sum of the n-1 distances (drop the longest) between the three points
+
 
 
 
