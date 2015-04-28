@@ -252,6 +252,7 @@ if __name__ == "__main__":
     vis.sweep()
 
     print "result"
-    for p1,p2 in vis.triangles: print p1,"\t", p2
+    for p1,p2,seg in vis.triangles: print p1,p2,seg
+    # print vis.triangles
 
 

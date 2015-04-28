@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+import numpy as np
 import random
 
 import los
@@ -24,7 +27,7 @@ def x_y_min_max(walls):
 def matrix_gen(bounds):
     #generate a matrix of points that cover beyond the feasable region
     #bounds = [x_min, x_max, y_min, y_max]
-    res = 30
+    res = 10
     raw_points = []
     for i in range(res):
         x = bounds[0]+((bounds[1]-bounds[0])/res)*i
@@ -64,48 +67,81 @@ def inside_walls(walls, raw_points, start_point):
             feasable_points.append(point)
     return feasable_points
 
+def get_points(start_point, walls):
+    bounds = x_y_min_max(walls)
+    raw_points = matrix_gen(bounds)
+    feasable_points = inside_walls(walls, raw_points, start_point)
+    return feasable_points
 
-
-
-start_point = (1.0, 1.0)
-
-walls = [[(0.0,0.0),(5.0,0.0)],[(5.0,0.0),(5.0,6.0)],[(5.0,6.0),(10.0,6.0)],[(10.0,6.0),(10.0,10.0)],[(10.0,10.0), (0.0,10.0)],[(0.0,10.0),(0.0,0.0)]]
-bounds = x_y_min_max(walls)
-raw_points = matrix_gen(bounds)
-feasable_points = inside_walls(walls, raw_points, start_point)
-vis.setup(walls)
-
-sights = {}
-for position in feasable_points:
-    sights[position] = vis.run(position)
-
-percentages = []
-
-path = [0]*2
-for point1 in feasable_points:
-    path[0] = point1
-    for point2 in feasable_points:
-        path[1] = point2
-
-        room = follow_path.follow(path, vis)
-        # room contains a dictionary mapping from wall segments to the portions of it we have seen
-        room.merge_visible()
-        percentages.append( (path, room.percentage()) )
-def min_func(thing):
+def dist_func(thing):
     path, _ = thing
-    a,b = path[0],path[1]
-    dist = ( (a[0]-b[0])**2 + (a[1]-b[1])**2)**0.5
+    path = [np.array(i) for i in path]
+    dist = 0
+    for i in range(len(path)-1):
+        a, b = path[i], path[i+1]
+        dist += np.linalg.norm(a-b)
     return dist
-def full_coverage(thing):
-    _, perc = thing
-    return perc == 1.0
 
-print min(filter(full_coverage,percentages),key=min_func)
+def find_start(thing):
+    path, _ = thing
+    if start in path:
+        return True
+    return False
+
+
+def main(start_point, walls):
+    
+    feasable_points = get_points(start_point, walls)
+    vis.setup(walls)
+
+    print "brute forcing"
+    percentages = []
+    for point1 in feasable_points:
+        for point2 in feasable_points:
+            # for point3 in feasable_points:
+            path = [point1, point2]
+
+            room = follow_path.follow(path, vis)
+            room.merge_visible()
+            percent_visable = room.percentage()
+            percentages.append( (path, percent_visable) )
+            room.clear()
+
+    print "finding best"
+    max_visible = max(percentages, key=lambda x: x[1])
+    # best_seen = filter(lambda x: x[1]==max_visible[1],percentages) 
+    best_seen = [p for p in percentages if p[1] == max_visible[1]]
+    include_start = [p for p in best_seen if start_point in p[0]]
+    if include_start:
+        best_locations = min(include_start, key=dist_func)
+    else:
+        best_locations = min(best_seen, key=dist_func)
+    return best_locations[0], room, vis
 
 
 # pick three points -> note whether they are the same or not
 # add up walls they can see -> return percentage 
 # figure out distace between points -> give score based on the sum of the n-1 distances (drop the longest) between the three points
+
+if __name__ == '__main__':
+    start_point = (1.0, 1.0)
+
+    walls = [[(0.0,0.0),(5.0,0.0)],[(5.0,0.0),(5.0,6.0)],[(5.0,6.0),(10.0,6.0)],[(10.0,6.0),(10.0,10.0)],[(10.0,10.0), (0.0,10.0)],[(0.0,10.0),(0.0,0.0)]]
+    main(start_point, walls)
+    # # ros setup
+    # rospy.init_node('main')
+    # pub_room = rospy.Publisher('room', PolygonStamped, queue_size=10)
+    # rospy.sleep(1)
+
+    # # room setup
+
+    # # publish room
+    # layout = PolygonStamped()
+    # layout.header.frame_id = "map"
+    # layout.polygon.points = [Point32(0,0,0), Point32(0,10,0),Point32(10,10,0),Point32(10,0,0)]
+    # pub_room.publish(layout)
+
+    # # run simulation
 
 
 
