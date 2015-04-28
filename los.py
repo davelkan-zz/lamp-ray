@@ -34,7 +34,10 @@ class Endpoint(Point):
         self.visualize = False
 
     def __str__(self):
-        return "x: %f, y: %f, begin: %s, angle: %f"%(self.x,self.y,self.begin,math.degrees(self.angle))
+        return "x: %.2f, y: %.2f, begin: %s, angle: %.2f"%(self.x,self.y,self.begin,self.angle)
+    def clear(self):
+        self.angle = 0.0
+        self.begin = False
 
 class Segment():
     def __init__(self,p1,p2,d=0.0):
@@ -42,7 +45,15 @@ class Segment():
         self.p2 = p2
         self.d = d
     def __str__(self):
-        return "p1: %s\np2: %s"%(self.p1,self.p2)
+        return "\np1: %s, \np2: %s\n"%(self.p1,self.p2)
+    def __repr__(self):
+        return "\nsegment"
+        # return "p1: %s, p2: %s"%(self.p1,self.p2)
+
+    def clear(self):
+        self.d = 0.0
+        self.p1.clear()
+        self.p2.clear()
 
 
 class Visibility():
@@ -66,6 +77,7 @@ class Visibility():
         self.segments.append(segment)
         self.endpoints.append(p1)
         self.endpoints.append(p2)
+    
 
     def load_map_edges(self,size,margin):
         self.add_segment(margin, margin, margin, size-margin)
@@ -91,6 +103,7 @@ class Visibility():
         self.center.x = x
         self.center.y = y
 
+        self.triangles = []
         for segment in self.segments:
             dx = 0.5 * (segment.p1.x + segment.p2.x) - x
             dy = 0.5 * (segment.p1.y + segment.p2.y) - y
@@ -136,21 +149,18 @@ class Visibility():
         if b.angle > a.angle: return -1
         if not a.begin and b.begin: return 1
         if a.begin and not b.begin: return -1
-        # if self._segment_in_front(a.segment,b.segment,self.center): return 1
-        # if self._segment_in_front(b.segment,a.segment,self.center): return -1
         return 0
 
     def _segment_compare(self, a, b):
         if self._segment_in_front(a,b,self.center): return 1
         elif self._segment_in_front(b,a,self.center): return -1
-        # if a.d > b.d: return -1
-        # if a.d < b.d: return 1
         return 0
 
     def sweep(self, maxAngle = 999.0):
         self.endpoints.sort(self._endpoint_compare)
 
         del self.open[:]
+        # begin_angle = self.endpoints[0].angle
         begin_angle = 0.0
 
         for run in range(2):
@@ -180,37 +190,40 @@ class Visibility():
         a2.y = self.center.y + math.sin(angle2)
         pEnd = self.line_intersection(b1, b2, a1, a2);
 
-        self.triangles.append((pBegin,pEnd))
+        self.triangles.append((pBegin,pEnd,segment))
         # self.triangles.append(pEnd);
 
     def line_intersection(self, p1, p2, p3, p4):
-        s = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x))\
-            / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y))
+        d = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y))
+        if d == 0:
+            s = 0
+        else:
+            s = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x))/ d
 
         x = p1.x + s * (p2.x - p1.x)
         y = p1.y + s * (p2.y - p1.y)
         return Point(x, y)
 
     def setup(self,wall_points):
+        # for w in wall_points: print w
         walls = []
         i = 0
-        while i+1 < len(wall_points):
-            p1,p2 = wall_points[i],wall_points[i+1]
+        for wall in wall_points:
+            p1,p2 = wall[0],wall[1]
             s = Segment(Point(*p1),Point(*p2))
             walls.append(s)
-            i+=1
-        p1,p2 = wall_points[-1],wall_points[0]
-        walls.append(Segment(Point(*p1),Point(*p2)))
 
         self.load_map(10,0,walls=walls)
 
     def run(self,location):
         self.set_light_location(*location)
         self.sweep()
-        seen = []
-        for p1,p2 in self.triangles:
-            seen.append(((p1.x, p1.y),(p2.x,p2.y)))
-        return seen
+        sights = []
+        for p1,p2,s in self.triangles:
+            x1, y1 = round(p1.x,3), round(p1.y,3)
+            x2, y2 = round(p2.x,3), round(p2.y,3)
+            sights.append(((x1, y1),(x2,y2),s))
+        return sights
 
 if __name__ == "__main__":
     vis = Visibility()
@@ -239,6 +252,7 @@ if __name__ == "__main__":
     vis.sweep()
 
     print "result"
-    for p1,p2 in vis.triangles: print p1,"\t", p2
+    for p1,p2,seg in vis.triangles: print p1,p2,seg
+    # print vis.triangles
 
 
