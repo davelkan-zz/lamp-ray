@@ -114,8 +114,6 @@ class cornerFinder:
 					sort_lines.append(item)
 				elif item[1] == sort_lines[i-1][1] and item[0] != sort_lines[i-1][0]:
 					sort_lines.append(item[::-1])
-			print sort_lines
-
 		return sort_lines
 
 	def run(self):
