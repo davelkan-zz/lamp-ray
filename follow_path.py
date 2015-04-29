@@ -1,7 +1,6 @@
 from copy import deepcopy
 import los
-# import rviz_display
-
+import datetime
 
 
 class Room():
@@ -106,6 +105,7 @@ def follow(path, vis):
 
 if __name__ == '__main__':
     path = [(1.0,1.0),(5.0,1.0),(9.0,1.0)]
+    # path = [(1.0,1.0),(1.0,1.0)]
     walls = [[(0.0,0.0),(10.0,0.0)],
             [(10.0,0.0),(10.0,10.0)],
             [(10.0,10.0),(0.0,10.0)],

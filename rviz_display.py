@@ -10,8 +10,8 @@ def make_line(points,line_id,color=[0.0,1.0,0.0], offset = 0):
     line.id = line_id
     line.type = Marker.LINE_STRIP
     line.action = Marker.ADD
-    line.scale.x = 0.07
-    line.scale.y = 0.07
+    line.scale.x = 2+offset
+    line.scale.y = 1
     line.pose.position.x = 0
     line.pose.position.y = 0
     line.pose.position.z = offset
@@ -33,7 +33,7 @@ def show_current(pub, current_views):
     for view_range in current_views:
         a = [view_range[0][0], view_range[0][1], 0]
         b = [view_range[1][0], view_range[1][1], 0]
-        line = make_line([Point(*a),Point(*b)],line_id, offset = 0.1)
+        line = make_line([Point(*a),Point(*b)],line_id, offset = 3)
         array.markers.append( line )
         line_id += 1
     print "publlishing current view"

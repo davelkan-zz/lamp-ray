@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import numpy as np
 import random
 
 import los
@@ -21,13 +20,14 @@ def x_y_min_max(walls):
         for point in segment:
             x_walls.append(point[0])
             y_walls.append(point[1])
-    #return [min(x_walls)+.1,max(x_walls)-.1,min(y_walls)+.1,max(y_walls)-.1] use this line to avoid placing points on the walls
-    return [min(x_walls),max(x_walls),min(y_walls),max(y_walls)]
+    return [min(x_walls)+1,max(x_walls)-1,min(y_walls)+1,max(y_walls)-1] 
+    # use this line to avoid placing points on the walls
+    # return [min(x_walls),max(x_walls),min(y_walls),max(y_walls)]
 
 def matrix_gen(bounds):
     #generate a matrix of points that cover beyond the feasable region
     #bounds = [x_min, x_max, y_min, y_max]
-    res = 10
+    res = 20
     raw_points = []
     for i in range(res):
         x = bounds[0]+((bounds[1]-bounds[0])/res)*i
@@ -75,11 +75,12 @@ def get_points(start_point, walls):
 
 def dist_func(thing):
     path, _ = thing
-    path = [np.array(i) for i in path]
+    # path = [np.array(i) for i in path]
     dist = 0
     for i in range(len(path)-1):
         a, b = path[i], path[i+1]
-        dist += np.linalg.norm(a-b)
+        dist += (a**2 + b**2)**0.5
+        # dist += np.linalg.norm(a-b)
     return dist
 
 def find_start(thing):
@@ -98,14 +99,14 @@ def main(start_point, walls):
     percentages = []
     for point1 in feasable_points:
         for point2 in feasable_points:
-            # for point3 in feasable_points:
-            path = [point1, point2]
+            for point3 in feasable_points:
+                path = [point1, point2, point3]
 
-            room = follow_path.follow(path, vis)
-            room.merge_visible()
-            percent_visable = room.percentage()
-            percentages.append( (path, percent_visable) )
-            room.clear()
+                room = follow_path.follow(path, vis)
+                room.merge_visible()
+                percent_visable = room.percentage()
+                percentages.append( (path, percent_visable) )
+                room.clear()
 
     print "finding best"
     max_visible = max(percentages, key=lambda x: x[1])
